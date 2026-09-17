@@ -987,6 +987,7 @@ Use these hashtags in search to filter out the tools
 - [Raycast AI](https://www.raycast.com/ai) - Mac-native operating system AI extension. `#freemium`
 - [Reclaim AI](https://reclaim.ai/) - AI-powered calendar management and time blocking. `#freemium`
 - [Releases Notes](https://www.releasesnotes.dev/) - Effortless Release Notes with Automation. `#free`
+- [Screenpipe](https://screenpipe.com/) - Captures screen text and audio transcripts locally, making computer history searchable for people and AI assistants through MCP and a local API. `#freemium` `#productivity`
 - [Soda Office](https://soda.office/) - Comprehensive navigation for office and life tools. `#free`
 - [Supermanage AI](https://supermanage.ai/) - Effortless prep for your 1-on-1 `#free`
 - [Taskade](https://www.taskade.com/) - Taskade elegantly unifies your team tasks, notes, and mind, stripping away the noise to reveal the essence of productivity. `#freemium`
