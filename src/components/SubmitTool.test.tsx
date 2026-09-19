@@ -74,7 +74,7 @@ describe('SubmitTool', () => {
       if (url.includes('/api/filters')) {
         return {
           ok: true,
-          json: async () => ({ categories: [] }),
+          json: async () => ({ categories: [{ _id: 'dev', name: 'Developer Tools' }] }),
         } as Response;
       }
       if (url.includes('/api/submissions') && init?.method === 'POST') {
@@ -94,6 +94,8 @@ describe('SubmitTool', () => {
       screen.getByPlaceholderText('https://...'),
       'https://example.com'
     );
+    await user.click(screen.getByPlaceholderText('Search and select categories...'));
+    await user.click(screen.getByRole('button', { name: 'Developer Tools' }));
     await user.click(screen.getByRole('button', { name: 'Submit Resource' }));
 
     await waitFor(() => {

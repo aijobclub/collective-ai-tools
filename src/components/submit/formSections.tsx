@@ -342,6 +342,7 @@ function CategoriesField({
 
   return (
     <CategoryPicker
+      required
       selectedIds={selectedIds}
       available={available}
       onChange={categories => onChange('categories', categories)}

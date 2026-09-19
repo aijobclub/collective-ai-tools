@@ -219,6 +219,9 @@ export async function submitResource(
     }
     res = await postJson('/api/skills', buildSkillPayload(data));
   } else {
+    if (!data.categories.length || data.categories.some(id => !id.trim())) {
+      throw new SubmitValidationError('Select at least one category.');
+    }
     res = await postJson(
       '/api/submissions',
       buildResourcePayload(data, activeTab, mcpSubtype)
