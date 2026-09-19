@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface SEOProps {
   title?: string;
@@ -266,6 +267,7 @@ function applySeoToDocument(seo: ResolvedSeo): void {
 }
 
 const SEO: React.FC<SEOProps> = props => {
+  const { pathname } = useLocation();
   useEffect(() => {
     upsertMeta('meta[name="robots"]', { name: 'robots', content: props.noindex ? 'noindex, follow' : 'index, follow' });
     return () => {
@@ -287,7 +289,7 @@ const SEO: React.FC<SEOProps> = props => {
     section,
     tags,
     aiFriendly,
-  } = resolveSeoProps(props);
+  } = resolveSeoProps({ ...props, url: props.url ?? `https://collectiveai.tools${pathname}` });
 
   useEffect(() => {
     applySeoToDocument({

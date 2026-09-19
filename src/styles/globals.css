@@ -749,3 +749,19 @@
     animation: discover-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 }
+/* Readable public HTML before React starts, and when JavaScript is unavailable. */
+.public-ssr { max-width: 1152px; margin: 0 auto; padding: 24px; color: #111827; background: #f9fafb; min-height: 100vh; overflow-wrap: anywhere; }
+.public-ssr header, .public-ssr footer { padding: 16px 0; }
+.public-ssr header > a { font-size: 20px; font-weight: 700; }
+.public-ssr nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+.public-ssr a { color: #1d4ed8; text-decoration: underline; text-underline-offset: 3px; }
+.public-ssr h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 700; margin: 24px 0; }
+.public-ssr h2 { font-size: 24px; font-weight: 600; margin: 24px 0 12px; }
+.public-ssr h3 { font-size: 18px; font-weight: 600; }
+.public-ssr p { margin: 12px 0; line-height: 1.6; }
+.public-ssr pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.public-ssr .public-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; list-style: none; padding: 0; }
+.public-ssr .public-cards li { border: 1px solid #d1d5db; padding: 20px; border-radius: 12px; }
+body[data-theme='dark'] .public-ssr { color: #f3f4f6; background: #111827; }
+body[data-theme='dark'] .public-ssr a { color: #93c5fd; }
+body[data-theme='dark'] .public-ssr .public-cards li { border-color: #374151; }

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { API_BASE_URL } from '../lib/api';
 import PageHeader from './PageHeader';
+import SEO from './SEO';
 
 interface Skill {
   id: string;
@@ -144,6 +145,7 @@ const SkillsMarketplace: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-12 pb-20 px-4 sm:px-6 lg:px-8">
+      <SEO title="Agent Skills Marketplace | Collective AI Tools" description="Discover agent skills for AI coding tools and development workflows." url="https://collectiveai.tools/skills" />
       <div className="max-w-7xl mx-auto">
         <PageHeader
           title="Skills Marketplace"

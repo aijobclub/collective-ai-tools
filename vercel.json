@@ -1,14 +1,47 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "redirects": [
-    {
-      "source": "/tools",
-      "destination": "/",
-      "permanent": true
+  "functions": {
+    "api/render-public.mjs": {
+      "includeFiles": "dist/app-shell.html",
+      "maxDuration": 15
     }
-  ],
+  },
   "rewrites": [
+    { "source": "/", "destination": "/api/render-public?pagePath=/" },
+    { "source": "/tools", "destination": "/api/render-public?pagePath=/tools" },
+    {
+      "source": "/tools/:id",
+      "destination": "/api/render-public?pagePath=/tools/:id"
+    },
+    {
+      "source": "/mcp-catalog",
+      "destination": "/api/render-public?pagePath=/mcp-catalog"
+    },
+    {
+      "source": "/mcp-catalog/:id",
+      "destination": "/api/render-public?pagePath=/mcp-catalog/:id"
+    },
+    {
+      "source": "/prompts",
+      "destination": "/api/render-public?pagePath=/prompts"
+    },
+    {
+      "source": "/skills",
+      "destination": "/api/render-public?pagePath=/skills"
+    },
+    {
+      "source": "/trending",
+      "destination": "/api/render-public?pagePath=/trending"
+    },
+    {
+      "source": "/leaderboard",
+      "destination": "/api/render-public?pagePath=/leaderboard"
+    },
+    {
+      "source": "/prompt-studio",
+      "destination": "/api/render-public?pagePath=/prompt-studio"
+    },
     {
       "source": "/api/(.*)",
       "destination": "https://app.collectiveai.tools/api/$1"
@@ -27,7 +60,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/app-shell.html"
     }
   ]
 }
