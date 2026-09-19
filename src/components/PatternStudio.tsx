@@ -10,12 +10,14 @@ import { PatternSidebar } from './pattern-studio/Sidebar';
 import { SettingsModal } from './pattern-studio/SettingsModal';
 import { usePatternStudio } from './pattern-studio/usePatternStudio';
 import { Workbench } from './pattern-studio/Workbench';
+import SEO from './SEO';
 
 export default function PatternStudio() {
   const { settings, library, run, modals, createNew } = usePatternStudio();
 
   return (
     <div className='min-h-screen bg-background text-foreground font-sans flex flex-col md:flex-row'>
+      <SEO title="Prompt Studio | Collective AI Tools" description="Explore prompt patterns for your AI workflows." url="https://collectiveai.tools/prompt-studio" />
       <MobileNav
         mobileTab={library.mobileTab}
         onChange={library.setMobileTab}

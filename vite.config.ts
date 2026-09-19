@@ -11,7 +11,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        globPatterns: ['**/*.{js,css,ico,png,svg}'],
+        // Navigation must reach the public HTML renderer, not a cached SPA shell.
+        navigateFallback: null,
       },
       manifest: {
         name: 'Collective AI Tools',
