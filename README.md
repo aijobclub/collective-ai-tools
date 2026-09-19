@@ -142,6 +142,7 @@ Use these hashtags in search to filter out the tools
 - [Jackey](https://jackey.elixpo.com/) - A Discord bot that generates and remixes images from text prompts, helping communities create stunning visuals instantly. `#free` `#opensource`
 - [lexical.Art](https://lexica.art) -AI image generation tool that allows you to create images from text descriptions. `#free`
 - [PixAI.Art](https://pixai.art) - AI art generator designed specifically for creating anime-inspired artwork `#free`
+- [RestorePhoto](https://restorephoto.org/) - Improves facial clarity in old portraits and blurry family photos with browser-based AI. `#freemium` `#photo`
 - [seaart.ai](https://www.seaart.ai/) - AI image generation tool with advanced configurations available, tons of ready to use models and image enhancements, text to img , img to text and much. `#freemium`
 
 **[⬆️ Back to Top](#table-of-contents)**
