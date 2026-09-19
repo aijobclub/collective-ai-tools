@@ -1047,6 +1047,7 @@ Use these hashtags in search to filter out the tools
 - [Consensus](https://consensus.app/) - AI-powered research engine that finds and summarizes scientific papers. `#freemium`
 - [Elicit](https://elicit.org/) - AI research assistant that helps you find and analyze academic papers. `#freemium`
 - [Lime AI](https://www.datalimeai.com/) - AI-powered research assistant for data-related tasks, designed to streamline and simplify data research and analysis processes. `#paid`
+- [Musuw](https://musuw.com/) - AI knowledge workspace with cited answers, connected Wiki pages, and a knowledge graph. `#freemium`
 - [NotebookLM](https://notebooklm.google.com/) - Google’s multimodal research thinking assistant. `#free`
 - [Research Rabbit](https://www.researchrabbit.ai/) - AI-powered research discovery and organization tool. `#free`
 - [Semantic Scholar](https://www.semanticscholar.org/) - AI-powered academic search engine with paper recommendations. `#free`
