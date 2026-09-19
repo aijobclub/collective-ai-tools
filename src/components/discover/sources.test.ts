@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { adaptTool, adaptMcp, adaptPrompt, adaptSkill, adaptRepo } from './sources';
 
 describe('discover adapters', () => {
-  it('adaptTool maps an AITool to an external DiscoverItem', () => {
+  it('adaptTool links an existing AITool to its detail page', () => {
     const item = adaptTool({
       _id: 't1', name: 'LangChain', description: 'LLM framework',
       url: 'https://langchain.com', tags: ['llm', 'agents'],
@@ -10,7 +10,7 @@ describe('discover adapters', () => {
     } as any);
     expect(item).toEqual({
       id: 't1', type: 'tool', title: 'LangChain', subtitle: 'LLM framework',
-      tags: ['llm', 'agents'], href: 'https://langchain.com', external: true, meta: 'Developer',
+      tags: ['llm', 'agents'], href: '/tools/t1', external: false, meta: 'Developer',
     });
   });
 

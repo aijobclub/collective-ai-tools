@@ -154,6 +154,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPath }) => {
               <div className="hidden md:flex items-center gap-4 border-l border-gray-200 dark:border-gray-700 pl-4 ml-1">
                 {user && (
                   <div className="flex items-center gap-3 ml-2">
+                    <Link to="/dashboard" className="text-sm font-medium text-blue-600 dark:text-blue-400">My dashboard</Link>
                     {user.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 shadow-xs" title={user.name} />
                     ) : (
@@ -287,6 +288,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPath }) => {
                                   <div className="flex flex-col">
                                       <span className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</span>
                                       <span className="text-xs text-gray-500">{user.role === 'admin' ? 'Administrator' : 'Member'}</span>
+                                      <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="mt-1 text-sm font-medium text-blue-600 dark:text-blue-400">My dashboard</Link>
                                   </div>
                               </div>
                                <button

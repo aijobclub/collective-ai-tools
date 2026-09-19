@@ -1,168 +1,259 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Star, MessageSquare, Send, User } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { Star } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Button } from './ui/button';
 
 interface Review {
   _id: string;
-  user: {
-    name: string;
-    avatar: string;
-  };
+  user: { _id: string; name: string } | null;
   rating: number;
   comment: string;
   createdAt: string;
 }
-
-interface ReviewSectionProps {
+interface ReviewResponse {
+  reviews: Review[];
+  count: number;
+  average: number | null;
+  page: number;
+  totalPages: number;
+}
+interface ReviewProps {
   targetId: string;
-  targetType: 'mcp' | 'tool';
+  targetType: 'mcp' | 'tool' | 'client';
 }
 
-export default function ReviewSection({ targetId, targetType }: ReviewSectionProps) {
+function Reviews({ targetId, targetType }: ReviewProps) {
   const { user } = useAuth();
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [result, setResult] = useState<ReviewResponse | null>(null);
+  const [page, setPage] = useState(1);
+  const [refresh, setRefresh] = useState(0);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchReviews();
-  }, [targetId]);
-
-  async function fetchReviews() {
-    try {
-      const res = await fetch(`/api/reviews/${targetId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setReviews(data);
+    const controller = new AbortController();
+    async function load() {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const response = await fetch(
+          `/api/reviews/${targetId}?type=${targetType}&page=${page}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok)
+          throw new Error('Could not load reviews. Please try again.');
+        const data = await response.json();
+        if (!controller.signal.aborted) setResult(data);
+      } catch (error) {
+        if (!controller.signal.aborted)
+          setLoadError(
+            error instanceof Error ? error.message : 'Could not load reviews.'
+          );
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch reviews', error);
-    } finally {
-      setLoading(false);
     }
-  }
+    void load();
+    return () => controller.abort();
+  }, [targetId, targetType, page, refresh]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (rating === 0) return;
-
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!rating || submitting) return;
     setSubmitting(true);
+    setSubmitError('');
+    setSaved(false);
     try {
-      const res = await fetch('/api/reviews', {
+      const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetId,
-          targetType,
-          rating,
-          comment
-        })
+        body: JSON.stringify({ targetId, targetType, rating, comment }),
       });
-
-      if (res.ok) {
-        setRating(0);
-        setComment('');
-        fetchReviews(); // Refresh list
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(
+          data.error || 'Could not save your review. Please try again.'
+        );
       }
+      setSaved(true);
+      setRating(0);
+      setComment('');
+      setPage(1);
+      setRefresh(value => value + 1);
     } catch (error) {
-      console.error('Failed to post review', error);
+      setSubmitError(
+        error instanceof Error ? error.message : 'Could not save your review.'
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-white">
-        <MessageSquare className="h-5 w-5" />
-        Reviews & Ratings
-      </h3>
-
-      {/* Write Review */}
+    <div className='space-y-5'>
+      <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
+        Reviews & ratings
+      </h2>
+      {result && !loadError && (
+        <p className='text-sm text-gray-600 dark:text-gray-300'>
+          {result.count
+            ? `${result.average?.toFixed(1)} out of 5 · ${result.count} ${result.count === 1 ? 'review' : 'reviews'}`
+            : 'No ratings yet'}
+        </p>
+      )}
       {user ? (
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xs">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rate this tool</label>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
+        <form
+          onSubmit={submit}
+          className='space-y-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800'
+        >
+          <fieldset disabled={submitting}>
+            <legend className='mb-2 text-sm font-medium'>Your rating</legend>
+            <div className='flex gap-2'>
+              {[1, 2, 3, 4, 5].map(value => (
                 <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(star)}
-                  className={`p-1 rounded-md transition-colors ${rating >= star ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600 hover:text-yellow-200'}`}
+                  key={value}
+                  type='button'
+                  aria-label={`${value} ${value === 1 ? 'star' : 'stars'}`}
+                  aria-pressed={rating === value}
+                  onClick={() => setRating(value)}
+                  className='rounded p-1 focus-visible:outline-2 focus-visible:outline-blue-500'
                 >
-                  <Star className="h-6 w-6 fill-current" />
+                  <Star
+                    className={`h-6 w-6 ${value <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
+                  />
                 </button>
               ))}
             </div>
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Review</label>
+          </fieldset>
+          <label className='block text-sm font-medium'>
+            Your experience
             <textarea
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              onChange={event => setComment(event.target.value)}
+              maxLength={3000}
+              disabled={submitting}
               rows={3}
-              placeholder="Share your experience..."
+              placeholder='What did you use it for? What worked, and what did not?'
+              className='mt-2 w-full rounded-lg border border-gray-300 bg-transparent p-3 dark:border-gray-600'
             />
-          </div>
-          <button
-            type="submit"
-            disabled={submitting || rating === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            <Send className="h-4 w-4" />
-            Post Review
-          </button>
+          </label>
+          <p className='text-xs text-gray-600 dark:text-gray-400'>
+            One review per account. Saving again updates your previous review.
+          </p>
+          <Button type='submit' disabled={submitting || !rating}>
+            {submitting ? 'Saving…' : 'Save review'}
+          </Button>
+          {submitError && (
+            <p role='alert' className='text-sm text-red-600'>
+              {submitError}
+            </p>
+          )}
+          {saved && (
+            <p
+              role='status'
+              className='text-sm text-green-700 dark:text-green-400'
+            >
+              Your review has been saved.
+            </p>
+          )}
         </form>
       ) : (
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 text-center">
-            <p className="text-blue-800 dark:text-blue-200 mb-2">Sign in to leave a review</p>
-            <Link to="/login" className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
-                Log In
-            </Link>
-        </div>
+        <p className='rounded-xl bg-blue-50 p-4 text-sm dark:bg-blue-900/20'>
+          <Link
+            to='/login'
+            className='text-blue-600 underline dark:text-blue-400'
+          >
+            Sign in
+          </Link>{' '}
+          to leave a review.
+        </p>
       )}
-
-      {/* Review List */}
-      <div className="space-y-4">
-        {loading ? (
-             <div className="text-center py-4 text-gray-500">Loading reviews...</div>
-        ) : reviews.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-                No reviews yet. Be the first to review!
+      {loading ? (
+        <p role='status'>Loading reviews…</p>
+      ) : loadError ? (
+        <div>
+          <p role='alert' className='mb-2 text-red-600'>
+            {loadError}
+          </p>
+          <Button
+            variant='outline'
+            onClick={() => setRefresh(value => value + 1)}
+          >
+            Retry reviews
+          </Button>
+        </div>
+      ) : !result?.reviews.length ? (
+        <p className='text-sm text-gray-600 dark:text-gray-400'>
+          No reviews yet. Share your experience.
+        </p>
+      ) : (
+        <>
+          {result.reviews.map(review => (
+            <article
+              key={review._id}
+              className='space-y-2 rounded-xl border border-gray-200 p-5 dark:border-gray-700'
+            >
+              <div className='flex flex-wrap justify-between gap-2'>
+                <h3 className='font-medium'>
+                  {review.user?.name || 'Former member'}
+                </h3>
+                <span
+                  aria-label={`${review.rating} out of 5 stars`}
+                  className='text-sm'
+                >
+                  ★ {review.rating}/5
+                </span>
+              </div>
+              <time
+                dateTime={review.createdAt}
+                className='block text-xs text-gray-600 dark:text-gray-400'
+              >
+                {new Date(review.createdAt).toLocaleDateString()}
+              </time>
+              <p className='whitespace-pre-wrap break-words text-sm text-gray-600 dark:text-gray-300'>
+                {review.comment}
+              </p>
+            </article>
+          ))}
+          {result.totalPages > 1 && (
+            <div className='flex items-center gap-3'>
+              <Button
+                variant='outline'
+                disabled={page === 1}
+                onClick={() => setPage(value => value - 1)}
+              >
+                Previous reviews
+              </Button>
+              <span className='text-sm'>
+                Page {page} of {result.totalPages}
+              </span>
+              <Button
+                variant='outline'
+                disabled={page >= result.totalPages}
+                onClick={() => setPage(value => value + 1)}
+              >
+                Next reviews
+              </Button>
             </div>
-        ) : (
-            reviews.map((review) => (
-                <div key={review._id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                            {review.user?.avatar ? (
-                                <img src={review.user.avatar} alt={review.user.name} className="w-8 h-8 rounded-full" />
-                            ) : (
-                                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                                    <User className="h-4 w-4 text-gray-500" />
-                                </div>
-                            )}
-                            <div>
-                                <p className="font-medium text-gray-900 dark:text-white text-sm">{review.user?.name || 'Unknown User'}</p>
-                                <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        <div className="flex text-yellow-400">
-                            {[...Array(5)].map((_, i) => (
-                                <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-current' : 'text-gray-300 dark:text-gray-600'}`} />
-                            ))}
-                        </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">{review.comment}</p>
-                </div>
-            ))
-        )}
-      </div>
+          )}
+        </>
+      )}
     </div>
+  );
+}
+
+export default function ReviewSection(props: ReviewProps) {
+  const { user } = useAuth();
+  return (
+    <Reviews
+      key={`${props.targetType}:${props.targetId}:${user?.id ?? 'guest'}`}
+      {...props}
+    />
   );
 }

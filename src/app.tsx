@@ -11,11 +11,15 @@ import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import BackToTop from './components/BackToTop';
 import DiscoverPage from './components/discover/DiscoverPage';
+import FavoritesNotice from './components/FavoritesNotice';
 import { capturePageview } from './lib/analytics';
 
 // Route components are code-split so the landing bundle stays small —
 // only the shell + DiscoverPage load up front; everything else on demand.
 const ExternalTools = lazy(() => import('./components/ExternalTools'));
+const ToolDetail = lazy(() => import('./components/ToolDetail'));
+const SharedCollection = lazy(() => import('./components/SharedCollection'));
+const UserDashboard = lazy(() => import('./components/UserDashboard'));
 const MCPCatalog = lazy(() => import('./components/MCPCatalog'));
 const MCPServerDetail = lazy(() => import('./components/MCPServerDetail'));
 const Login = lazy(() => import('./components/Login'));
@@ -61,18 +65,22 @@ function App() {
   // Cookieless analytics: record a pageview on every route change.
   // This lazily loads posthog-js after first paint, off the critical path.
   useEffect(() => {
-    capturePageview(location.pathname);
+    if (!location.pathname.startsWith('/collections/shared/') && !location.pathname.startsWith('/dashboard')) capturePageview(location.pathname);
   }, [location.pathname]);
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Navigation currentPath={location.pathname} />
+        <FavoritesNotice />
         <main className="flex-1">
           <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route index element={<DiscoverPage />} />
             <Route path="tools" element={<ExternalTools />} />
+            <Route path="tools/:toolId" element={<ToolDetail />} />
+            <Route path="collections/shared/:token" element={<SharedCollection />} />
+            <Route path="dashboard" element={<UserDashboard />} />
           <Route path="/trending" element={<TrendingPage />} />
           <Route path="/skills" element={<SkillsMarketplace />} />
           <Route path="/prompts" element={<CommunityPromptsPage />} />

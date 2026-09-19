@@ -38,6 +38,8 @@ async function loadClient(): Promise<PostHog | null> {
     api_host: host,
     persistence: 'memory', // cookieless — no consent banner needed
     capture_pageview: false, // SPA: pageviews are driven manually per route
+    // Sharing links are bearer capabilities. Also filter autocapture/referrers.
+    before_send: event => ['/collections/shared/', '/dashboard'].some(path => JSON.stringify(event).includes(path)) ? null : event,
     autocapture: true,
     disable_session_recording: true,
     person_profiles: 'identified_only',

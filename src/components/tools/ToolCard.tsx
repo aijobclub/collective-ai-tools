@@ -2,11 +2,13 @@ import React from 'react';
 import { Tool } from '../../types/tools';
 import { Heart, ExternalLink, Scale } from 'lucide-react';
 import { withUtm } from '@/lib/outbound';
+import { toolPath } from '@/lib/toolDetails';
 
 
 interface ToolCardProps {
   tool: Tool;
   isFavorite: boolean;
+  canSave?: boolean;
   onToggleFavorite: (tool: Tool) => void;
   onTrackClick: (tool: Tool) => void;
   isComparing?: boolean;
@@ -15,7 +17,8 @@ interface ToolCardProps {
 
 const ToolCard: React.FC<ToolCardProps> = ({ 
   tool, 
-  isFavorite, 
+  isFavorite,
+  canSave = true,
   onToggleFavorite, 
   onTrackClick,
   isComparing = false,
@@ -33,8 +36,8 @@ const ToolCard: React.FC<ToolCardProps> = ({
 
   return (
     <a
-      href={withUtm(tool.url)}
-      target="_blank"
+      href={tool._id ? toolPath(tool._id) : withUtm(tool.url)}
+      target={tool._id ? undefined : '_blank'}
       rel="noopener noreferrer"
       className="group block h-full"
       onClick={handleCardClick}
@@ -65,6 +68,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
                 />
               </button>
               <button
+                disabled={!canSave}
                 onClick={handleFavoriteClick}
                 className={`
                   p-2.5 rounded-lg border transition-all duration-200 z-10
@@ -105,7 +109,7 @@ const ToolCard: React.FC<ToolCardProps> = ({
           </div>
           
           <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 text-sm font-medium group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
-            Visit Tool
+            {tool._id ? 'View details' : 'Visit Tool'}
             <ExternalLink className="w-3.5 h-3.5" />
           </div>
         </div>

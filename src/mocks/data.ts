@@ -39,6 +39,13 @@ export const mockAITools = [
     pricing: [mockPricingTiers[1]],
     tags: ['coding', 'assistant'],
     addedDate: '2026-01-15T00:00:00.000Z',
+    useCases: ['Review a pull request', 'Draft unit tests for a function'],
+    limitations: ['Fixture data for local development only'],
+    examples: ['Provide a function and ask for edge-case tests.'],
+    alternatives: ['Mock Writer'],
+    pricingDetails: 'Example pricing notes for the local fixture.',
+    pricingUrl: 'https://example.com/pricing',
+    pricingCheckedAt: '2026-01-15',
   },
   {
     _id: 'tool-2',

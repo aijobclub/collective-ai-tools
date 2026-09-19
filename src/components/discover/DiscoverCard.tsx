@@ -16,7 +16,7 @@ function monogram(title: string): string {
 
 export function DiscoverCard({ item, style }: { item: DiscoverItem; style?: CSSProperties }) {
   const accent = TYPE_ACCENT[item.type];
-  const { isFavorite, toggleFavorite } = useFavorites(item.type);
+  const { isFavorite, toggleFavorite, canSave } = useFavorites(item.type);
   const favorited = isFavorite(item.title);
 
   const onClick = () =>
@@ -63,6 +63,7 @@ export function DiscoverCard({ item, style }: { item: DiscoverItem; style?: CSSP
                 </span>
               )}
               <button
+                disabled={!canSave}
                 onClick={handleFavoriteClick}
                 className={cn(
                   "relative z-10 p-1.5 rounded-full transition-all duration-200 focus:outline-hidden",

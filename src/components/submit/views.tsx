@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function SignInPrompt({ onSignIn }: { onSignIn: () => void }) {
   return (
@@ -42,6 +43,7 @@ export function SubmissionSuccess({
       >
         Submit Another
       </button>
+      <Link to='/dashboard' className='mt-4 block text-blue-600 underline dark:text-blue-400'>Track your submission in My dashboard</Link>
     </div>
   );
 }

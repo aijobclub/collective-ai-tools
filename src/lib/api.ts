@@ -66,6 +66,14 @@ export interface AITool {
   pricing?: FilterOption[];
   tags: string[];
   addedDate?: string;
+  views?: number;
+  useCases?: string[];
+  limitations?: string[];
+  examples?: string[];
+  alternatives?: string[];
+  pricingDetails?: string;
+  pricingUrl?: string;
+  pricingCheckedAt?: string;
 }
 
 export interface APIResponse<T> {

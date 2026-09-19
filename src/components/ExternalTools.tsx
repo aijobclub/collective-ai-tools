@@ -38,7 +38,7 @@ const ExternalTools: React.FC = () => {
   );
 
   // Persistent State (Favorites & Clicks)
-  const { favorites, toggleFavorite: toggleFavStorage } = useFavorites('tool');
+  const { favorites, toggleFavorite: toggleFavStorage, canSave } = useFavorites('tool');
   const [comparingTools, setComparingTools] = useState<Tool[]>([]);
   const navigate = useNavigate();
 
@@ -86,7 +86,7 @@ const ExternalTools: React.FC = () => {
           category: t.categories?.[0]?.name || 'Uncategorized',
           addedDate: t.addedDate,
           clickCount: savedClicks[t.website || t.url]?.count || 0,
-          views: 0 // Placeholder if backend API doesn't return view count yet
+          views: t.views ?? 0
         }));
 
         setTools(mappedTools);
@@ -132,8 +132,7 @@ const ExternalTools: React.FC = () => {
       t.url === url ? { ...t, clickCount: savedClicks[url].count } : t
     ));
 
-    // Track outbound tool click — the core curation signal (which tools people use)
-    captureEvent('tool_click', { url, name: tool.name });
+    captureEvent(tool._id ? 'tool_detail_open' : 'tool_click', { url, name: tool.name });
   };
 
   const toggleTag = (tag: string) => {
@@ -316,6 +315,7 @@ const ExternalTools: React.FC = () => {
                              tool={tool}
                              isFavorite={favorites.has(tool.name)}
                              onToggleFavorite={toggleFavorite}
+                             canSave={canSave}
                              onTrackClick={trackClick}
                              isComparing={comparingTools.some(t => t.name === tool.name)}
                              onCompareToggle={toggleCompare}

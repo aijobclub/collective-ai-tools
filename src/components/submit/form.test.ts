@@ -83,6 +83,10 @@ describe('submit form helpers', () => {
   });
 
   describe('payloads', () => {
+    it('preserves rich tool details and parses list fields without inventing a pricing date', () => {
+      const payload = buildResourcePayload(form({ useCases: ' Review code\n\nWrite tests ', limitations: 'Requires internet', examples: 'Review a PR', alternatives: 'Other Tool', pricingDetails: 'Free plan', pricingUrl: 'https://example.com/pricing' }), 'tool', 'server');
+      expect(payload.data).toMatchObject({ useCases: ['Review code', 'Write tests'], limitations: ['Requires internet'], examples: ['Review a PR'], alternatives: ['Other Tool'], pricingDetails: 'Free plan', pricingCheckedAt: '' });
+    });
     it('builds a skill payload with parsed tags and repo URL', () => {
       const data = form({
         name: 'Skill',
@@ -111,7 +115,7 @@ describe('submit form helpers', () => {
       const data = form({ name: 'Tool', tags: 'free' });
       expect(buildResourcePayload(data, 'mcp', 'client')).toEqual({
         type: 'client',
-        data: { ...data, tags: ['free'] },
+        data: { ...data, tags: ['free'], useCases: [], limitations: [], examples: [], alternatives: [] },
       });
     });
   });
