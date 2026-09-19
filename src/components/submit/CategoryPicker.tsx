@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { X } from 'lucide-react';
 import {
   FIELD_INPUT_CLASS,
@@ -56,11 +56,14 @@ export function CategoryPicker({
   selectedIds,
   available,
   onChange,
+  required = false,
 }: {
+  required?: boolean;
   selectedIds: string[];
   available: CategoryOption[];
   onChange: (ids: string[]) => void;
 }) {
+  const inputId = useId();
   const [search, setSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const selected = available.filter(cat => selectedIds.includes(cat._id));
@@ -77,7 +80,7 @@ export function CategoryPicker({
 
   return (
     <div>
-      <label className={LABEL_CLASS}>Categories (Select multiple)</label>
+      <label htmlFor={inputId} className={LABEL_CLASS}>Categories {required ? '(required; select at least one)' : '(Select multiple)'}</label>
       <div className='flex flex-col gap-2'>
         {selected.length > 0 && (
           <div className='flex flex-wrap gap-2'>
@@ -101,6 +104,8 @@ export function CategoryPicker({
 
         <div className='relative'>
           <input
+            id={inputId}
+            aria-required={required}
             type='text'
             placeholder='Search and select categories...'
             value={search}

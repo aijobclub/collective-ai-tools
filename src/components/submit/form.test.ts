@@ -121,6 +121,12 @@ describe('submit form helpers', () => {
       fetchMock.mockReset();
     });
 
+    it.each(['tool', 'mcp'] as const)('requires categories for %s without sending a request', async type => {
+      fetchMock.mockResolvedValue({ ok: true } as Response);
+      await expect(submitResource(form(), type, 'server')).rejects.toThrow('Select at least one category.');
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
     it('posts skills when the skill tab is active', async () => {
       fetchMock.mockResolvedValue({
         ok: true,
@@ -152,7 +158,7 @@ describe('submit form helpers', () => {
         json: async () => ({}),
       } as Response);
 
-      const data = form({ name: 'Tool' });
+      const data = form({ name: 'Tool', categories: ['dev'] });
       await submitResource(data, 'tool', 'server');
 
       expect(fetchMock).toHaveBeenCalledWith(
@@ -170,7 +176,7 @@ describe('submit form helpers', () => {
         json: async () => ({ error: 'Duplicate name' }),
       } as Response);
 
-      await expect(submitResource(form(), 'tool', 'server')).rejects.toThrow(
+      await expect(submitResource(form({ categories: ['dev'] }), 'tool', 'server')).rejects.toThrow(
         'Duplicate name'
       );
     });
