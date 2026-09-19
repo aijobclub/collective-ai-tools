@@ -3,15 +3,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, XCircle, ExternalLink, Code, Wrench, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CategoryPicker } from '../submit/CategoryPicker';
+import type { CategoryOption } from '../submit/form';
 
 interface Submission {
   _id: string;
-  type: 'mcp' | 'tool';
+  type: 'mcp' | 'tool' | 'client';
   data: {
     name: string;
     description: string;
     url: string;
-    category: string;
+    category?: string;
+    categories?: string[];
   };
   user: {
     name: string;
@@ -23,34 +26,52 @@ interface Submission {
 
 export default function SubmissionList() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<Record<string, string[]>>({});
+  const [categoryError, setCategoryError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchSubmissions();
-  }, []);
-
-  async function fetchSubmissions() {
-    try {
-      const res = await fetch('/api/admin/submissions');
-      if (res.ok) {
-        const data = await res.json();
-        setSubmissions(data);
+    async function fetchSubmissions() {
+      try {
+        const res = await fetch('/api/admin/submissions');
+        if (res.ok) {
+          const data = await res.json();
+          setSubmissions(data);
+          setSelectedCategories(Object.fromEntries(data.map((submission: Submission) => [
+            submission._id,
+            submission.data.categories?.length ? submission.data.categories : submission.data.category ? [submission.data.category] : [],
+          ])));
+        }
+      } catch (error) {
+        console.error('Failed to fetch submissions', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch submissions', error);
-    } finally {
-      setLoading(false);
     }
-  }
+
+    fetchSubmissions();
+    fetch('/api/filters')
+      .then(async res => {
+        if (!res.ok) throw new Error('Failed to load categories. Reload to try again.');
+        const data = await res.json();
+        setCategories(data.categories || []);
+      })
+      .catch(() => setCategoryError('Failed to load categories. Reload to try again.'));
+  }, []);
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     setProcessingId(id);
     setError(null);
     try {
         const res = await fetch(`/api/admin/submissions/${id}/${action}`, {
-            method: 'POST'
+            method: 'POST',
+            ...(action === 'approve' ? {
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ categories: selectedCategories[id] || [] }),
+            } : {})
         });
         if (res.ok) {
             setSubmissions(prev => prev.filter(s => s._id !== id));
@@ -71,6 +92,7 @@ export default function SubmissionList() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Pending Submissions</h1>
 
+      {categoryError && <p role="alert" className="text-red-600">{categoryError}</p>}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
           {error}
@@ -93,7 +115,7 @@ export default function SubmissionList() {
                                 <div className="flex items-center gap-3">
                                     <Badge variant={submission.type === 'mcp' ? 'default' : 'secondary'} className="flex items-center gap-1">
                                         {submission.type === 'mcp' ? <Code className="h-3 w-3" /> : <Wrench className="h-3 w-3" />}
-                                        {submission.type === 'mcp' ? 'MCP Server' : 'AI Tool'}
+                                        {submission.type === 'mcp' ? 'MCP Server' : submission.type === 'client' ? 'MCP Client' : 'AI Tool'}
                                     </Badge>
                                     <span className="text-sm text-gray-500">
                                         by {submission.user?.name} ({submission.user?.email})
@@ -109,8 +131,18 @@ export default function SubmissionList() {
                                         <ExternalLink className="h-4 w-4" />
                                         View Resource
                                      </a>
-                                     <span className="text-gray-500">Category: {submission.data.category}</span>
+
                                 </div>
+                                <fieldset disabled={!!processingId}>
+                                  <CategoryPicker
+                                    available={categories}
+                                    selectedIds={selectedCategories[submission._id] || []}
+                                    onChange={ids => setSelectedCategories(prev => ({ ...prev, [submission._id]: ids }))}
+                                  />
+                                </fieldset>
+                                {submission.type === 'tool' && !selectedCategories[submission._id]?.length && (
+                                  <p className="text-sm text-amber-700">Select at least one category before approving.</p>
+                                )}
                              </div>
 
                              <div className="flex items-center gap-3">
@@ -128,7 +160,7 @@ export default function SubmissionList() {
                                     size="sm"
                                     className="bg-green-600 hover:bg-green-700 text-white"
                                     onClick={() => handleAction(submission._id, 'approve')}
-                                    disabled={!!processingId}
+                                    disabled={!!processingId || (submission.type === 'tool' && !selectedCategories[submission._id]?.length)}
                                 >
                                     {processingId === submission._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
                                     Approve
