@@ -18,6 +18,7 @@ import { capturePageview } from './lib/analytics';
 // only the shell + DiscoverPage load up front; everything else on demand.
 const ExternalTools = lazy(() => import('./components/ExternalTools'));
 const ToolDetail = lazy(() => import('./components/ToolDetail'));
+const Leaderboard = lazy(() => import('./components/Leaderboard'));
 const SharedCollection = lazy(() => import('./components/SharedCollection'));
 const UserDashboard = lazy(() => import('./components/UserDashboard'));
 const MCPCatalog = lazy(() => import('./components/MCPCatalog'));
@@ -79,6 +80,7 @@ function App() {
             <Route index element={<DiscoverPage />} />
             <Route path="tools" element={<ExternalTools />} />
             <Route path="tools/:toolId" element={<ToolDetail />} />
+            <Route path="leaderboard" element={<Leaderboard />} />
             <Route path="collections/shared/:token" element={<SharedCollection />} />
             <Route path="dashboard" element={<UserDashboard />} />
           <Route path="/trending" element={<TrendingPage />} />

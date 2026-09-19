@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Search, Heart } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Search, Heart, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import SEO from '@/components/SEO';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -49,6 +49,7 @@ export default function DiscoverPage() {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <Link to='/leaderboard' className='inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'><Trophy aria-hidden='true' className='h-3.5 w-3.5' />Leaderboard</Link>
             <button
               onClick={() => setShowFavorites(!showFavorites)}
               className={cn(
