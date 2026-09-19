@@ -5,11 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CategoryPicker } from '../submit/CategoryPicker';
 import type { CategoryOption } from '../submit/form';
+import { TOOL_DETAIL_LISTS } from '../submit/ToolDetailsFields';
+import type { AITool } from '@/lib/api';
 
 interface Submission {
   _id: string;
   type: 'mcp' | 'tool' | 'client';
-  data: {
+  data: Pick<AITool, 'useCases' | 'limitations' | 'examples' | 'alternatives' | 'pricingDetails' | 'pricingUrl' | 'pricingCheckedAt'> & {
     name: string;
     description: string;
     url: string;
@@ -126,6 +128,15 @@ export default function SubmissionList() {
                                 </div>
                                 <h3 className="text-xl font-bold">{submission.data.name}</h3>
                                 <p className="text-gray-600 dark:text-gray-300">{submission.data.description}</p>
+                                {submission.type === 'tool' && <details className="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                                  <summary className="cursor-pointer text-sm font-medium">Review tool details</summary>
+                                  <div className="mt-3 space-y-3 text-sm">
+                                    {TOOL_DETAIL_LISTS.map(({ key, label }) => submission.data[key]?.length ? <div key={key}><h4 className="font-semibold">{label}</h4><ul className="list-disc pl-5">{submission.data[key]?.map((value, index) => <li key={index} className="whitespace-pre-wrap break-words">{value}</li>)}</ul></div> : null)}
+                                    <p className="whitespace-pre-wrap">{submission.data.pricingDetails || 'No pricing notes supplied.'}</p>
+                                    {submission.data.pricingUrl && <a href={submission.data.pricingUrl} target="_blank" rel="noopener noreferrer" className="block text-blue-600 underline">Pricing source</a>}
+                                    {submission.data.pricingCheckedAt && <p>Contributor checked pricing: {submission.data.pricingCheckedAt}</p>}
+                                  </div>
+                                </details>}
                                 <div className="flex items-center gap-4 text-sm mt-2">
                                      <a href={submission.data.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
                                         <ExternalLink className="h-4 w-4" />

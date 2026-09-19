@@ -5,6 +5,8 @@ import { useResourceCRUD } from '../useResourceCRUD';
 import { ExternalLink } from 'lucide-react';
 import type { AdminAITool, AdminListParams, AdminListResponse } from './types';
 import type { FilterOption } from '@/lib/api';
+import { TOOL_DETAIL_LISTS } from '@/components/submit/ToolDetailsFields';
+import { parseLines } from '@/components/submit/form';
 
 const API_PATH = '/api/admin/ai-tools';
 
@@ -19,6 +21,9 @@ export default function AdminAITools() {
     order: 'desc',
   });
   const [categories, setCategories] = useState<FilterOption[]>([]);
+  const [pricing, setPricing] = useState<FilterOption[]>([]);
+  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -45,6 +50,7 @@ export default function AdminAITools() {
 
   // Load categories for the multi-select
   useEffect(() => {
+    fetch('/api/filters').then(r => r.json()).then(result => setPricing(result.pricing ?? [])).catch(console.error);
     fetch('/api/admin/categories?limit=200')
       .then(r => r.json())
       .then(result => setCategories(result.data ?? []))
@@ -65,6 +71,11 @@ export default function AdminAITools() {
       required: true,
       options: categories,
     },
+    { key: 'pricing', label: 'Pricing tiers', type: 'multi-select' as const, options: pricing },
+    ...TOOL_DETAIL_LISTS.map(field => ({ ...field, label: `${field.label} (one per line)`, type: 'textarea' as const })),
+    { key: 'pricingDetails', label: 'Pricing details', type: 'textarea' as const },
+    { key: 'pricingUrl', label: 'Pricing source URL', type: 'url' as const },
+    { key: 'pricingCheckedAt', label: 'Date contributor checked pricing', type: 'date' as const },
   ];
 
   const handleOpenEdit = (row: AdminAITool) => {
@@ -73,16 +84,23 @@ export default function AdminAITools() {
       typeof c === 'string' ? c : c._id
     ) ?? [];
     const tagsStr = Array.isArray(row.tags) ? row.tags.join(', ') : row.tags ?? '';
-    crud.openEdit({ ...row, categories: categoryIds, tags: tagsStr });
+    crud.openEdit({ ...row, categories: categoryIds, tags: tagsStr,
+      pricing: row.pricing?.map(p => typeof p === 'string' ? p : p._id) ?? [],
+      ...Object.fromEntries(TOOL_DETAIL_LISTS.map(({ key }) => [key, (row[key] ?? []).join('\n')])),
+    });
   };
 
   const handleConfirm = async () => {
+    if (saving) return;
+    setSaving(true);
+    setSaveError('');
     // Build the normalized payload directly (don't rely on state mutation timing)
     const payload = {
       ...crud.formValues,
       tags: typeof crud.formValues.tags === 'string'
         ? crud.formValues.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
         : crud.formValues.tags ?? [],
+      ...Object.fromEntries(TOOL_DETAIL_LISTS.map(({ key }) => [key, parseLines(crud.formValues[key] || '')])),
     };
 
     const isEdit = crud.dialogMode === 'edit';
@@ -107,6 +125,9 @@ export default function AdminAITools() {
     } catch (err: any) {
       // surface error via the crud hook's error state
       console.error('AdminAITools mutation failed:', err.message);
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -176,14 +197,14 @@ export default function AdminAITools() {
           onChange={crud.handleChange}
           onConfirm={handleConfirm}
           onClose={crud.close}
-          loading={crud.saving}
+          loading={saving}
           recordName={(crud.selectedRecord as any)?.name}
         />
       )}
 
-      {crud.error && (
+      {(saveError || crud.error) && (
         <div className="fixed bottom-4 right-4 z-50 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg px-4 py-3 text-sm shadow-lg">
-          {crud.error}
+          {saveError || crud.error}
         </div>
       )}
     </>

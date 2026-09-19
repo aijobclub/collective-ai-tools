@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 // Types
 // ---------------------------------------------------------------------------
 
-export type FieldType = 'text' | 'textarea' | 'url' | 'multi-select';
+export type FieldType = 'text' | 'textarea' | 'url' | 'date' | 'multi-select';
 
 export interface FieldDef {
   key: string;
@@ -146,7 +146,7 @@ export default function ResourceDialog({
                     </div>
                   ) : (
                     <Input
-                      type={fieldType === 'url' ? 'url' : 'text'}
+                      type={fieldType === 'url' || fieldType === 'date' ? fieldType : 'text'}
                       value={value}
                       onChange={e => onChange(field.key, e.target.value)}
                       placeholder={field.placeholder}

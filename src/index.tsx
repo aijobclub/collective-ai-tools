@@ -8,6 +8,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './app';
 import { AuthProvider } from './context/AuthContext';
+import { FavoritesProvider } from './context/FavoritesContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './styles/globals.css';
 
@@ -32,7 +33,7 @@ async function bootstrap() {
       <BrowserRouter>
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id'}>
           <AuthProvider>
-            <App />
+            <FavoritesProvider><App /></FavoritesProvider>
           </AuthProvider>
         </GoogleOAuthProvider>
       </BrowserRouter>

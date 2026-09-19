@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react';
+import { ToolDetailsFields } from './ToolDetailsFields';
 import {
   CompatibleAgentsSection,
   CoreFields,
@@ -86,6 +87,7 @@ export function SubmitToolForm({
             value={data.tags}
             onChange={tags => onChange('tags', tags)}
           />
+          {flags.isTool && <ToolDetailsFields data={data} onChange={onChange} />}
           <SubmitButton loading={loading} />
         </form>
       </div>

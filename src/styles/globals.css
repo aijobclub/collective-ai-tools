@@ -2,7 +2,8 @@
 
 @custom-variant dark (&:where(body[data-theme="dark"], body[data-theme="dark"] *));
 
-@theme {
+/* Resolve semantic colors where they are used, including body theme overrides. */
+@theme inline {
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));

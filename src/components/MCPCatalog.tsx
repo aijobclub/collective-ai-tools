@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { recordResourceClick } from '@/lib/engagement';
 import { withUtm } from '@/lib/outbound';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -33,10 +34,11 @@ import { fetchMCPServers, fetchFilters, MCPServer, FilterOption } from '@/lib/ap
 import { Select } from './ui/select';
 
 const MCPCatalog: React.FC = () => {
+  const [params] = useSearchParams();
   // Filter States
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(() => params.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState('all'); // Slug
-  const [selectedType, setSelectedType] = useState('all'); // 'server' | 'client' | 'all'
+  const [selectedType, setSelectedType] = useState(() => params.get('type') === 'client' ? 'client' : 'all');
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -229,6 +231,7 @@ const MCPCatalog: React.FC = () => {
             {server.url && (
                 <a
                   href={withUtm(server.url)}
+                  onClick={() => { void recordResourceClick(server._id, selectedType === 'client' ? 'client' : 'mcp'); }}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
@@ -239,6 +242,7 @@ const MCPCatalog: React.FC = () => {
             )}
             <a
               href={server.githubUrl ? withUtm(server.githubUrl) : undefined}
+              onClick={() => { if (server.githubUrl) void recordResourceClick(server._id, selectedType === 'client' ? 'client' : 'mcp'); }}
               target="_blank"
               rel="noopener noreferrer"
               className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"

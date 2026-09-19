@@ -20,6 +20,7 @@ interface SEOProps {
   section?: string;
   tags?: string[];
   aiFriendly?: boolean;
+  noindex?: boolean;
 }
 
 const AI_FRIENDLY_METAS: Array<{ name: string; content: string }> = [
@@ -265,6 +266,13 @@ function applySeoToDocument(seo: ResolvedSeo): void {
 }
 
 const SEO: React.FC<SEOProps> = props => {
+  useEffect(() => {
+    upsertMeta('meta[name="robots"]', { name: 'robots', content: props.noindex ? 'noindex, follow' : 'index, follow' });
+    return () => {
+      upsertMeta('meta[name="robots"]', { name: 'robots', content: 'index, follow' });
+      document.querySelector('script[type="application/ld+json"]')?.remove();
+    };
+  }, [props.noindex]);
   const {
     title,
     description,

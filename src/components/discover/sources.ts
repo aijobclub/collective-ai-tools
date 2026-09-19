@@ -1,5 +1,6 @@
 import type { AITool, MCPServer } from '@/lib/api';
 import type { DiscoverItem, DiscoverType } from './types';
+import { toolPath } from '@/lib/toolDetails';
 
 type McpRaw = MCPServer;
 interface PromptRaw { _id: string; title: string; description?: string; content: string; tags?: string[]; source?: string }
@@ -11,7 +12,7 @@ function clean(text?: string): string {
 }
 
 export function adaptTool(t: AITool): DiscoverItem {
-  return { id: t._id, type: 'tool', title: t.name, subtitle: clean(t.description), tags: t.tags ?? [], href: t.url, external: true, meta: t.pricing?.[0]?.name ?? t.categories?.[0]?.name };
+  return { id: t._id, type: 'tool', title: t.name, subtitle: clean(t.description), tags: t.tags ?? [], href: toolPath(t._id), external: false, meta: t.pricing?.[0]?.name ?? t.categories?.[0]?.name };
 }
 
 export function adaptMcp(m: McpRaw): DiscoverItem {

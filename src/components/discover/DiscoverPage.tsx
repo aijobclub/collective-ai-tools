@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { DiscoverHero } from './DiscoverHero';
 import { SearchResults } from './SearchResults';
 import { DiscoverBrowse } from './DiscoverBrowse';
+import SavedFavorites from '../SavedFavorites';
 
 const POPULAR = ['agents', 'code review', 'rag', 'image generation', 'mcp'];
 
@@ -76,7 +77,7 @@ export default function DiscoverPage() {
         </div>
 
         <div className="mt-8">
-          {query.trim() ? <SearchResults query={query} showFavorites={showFavorites} /> : <DiscoverBrowse showFavorites={showFavorites} />}
+          {query.trim() ? <SearchResults query={query} showFavorites={showFavorites} /> : showFavorites ? <SavedFavorites /> : <DiscoverBrowse showFavorites={false} />}
         </div>
       </div>
     </ErrorBoundary>

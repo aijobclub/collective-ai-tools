@@ -80,4 +80,17 @@ describe('analytics', () => {
 
     expect(initMock).toHaveBeenCalledTimes(1);
   });
+  it('drops events containing public collection capability links', async () => {
+    vi.stubEnv('DEV', false);
+    vi.stubEnv('VITE_POSTHOG_KEY', 'phc_test');
+    const { captureEvent } = await import('../analytics');
+    await captureEvent('initialize');
+    const beforeSend = initMock.mock.calls[0][1].before_send;
+    expect(beforeSend).toBeTypeOf('function');
+    expect(beforeSend({ properties: { $current_url: 'https://example.test/collections/shared/private-token' } })).toBeNull();
+    expect(beforeSend({ properties: { $referrer: 'https://example.test/collections/shared/private-token' } })).toBeNull();
+    expect(beforeSend({ properties: { $current_url: 'https://example.test/dashboard' } })).toBeNull();
+    const ordinary = { properties: { $current_url: 'https://example.test/tools' } };
+    expect(beforeSend(ordinary)).toBe(ordinary);
+  });
 });

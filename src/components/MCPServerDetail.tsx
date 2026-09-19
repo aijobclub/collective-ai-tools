@@ -7,6 +7,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { withUtm } from '@/lib/outbound';
+import { recordResourceClick, recordResourceView } from '@/lib/engagement';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -141,7 +142,7 @@ const MCPServerSidebar: React.FC<{
         <Button
           variant="outline"
           className="w-full justify-start"
-          onClick={() => server.githubUrl && window.open(withUtm(server.githubUrl), '_blank')}
+          onClick={() => { if (server.githubUrl) { void recordResourceClick(server._id, 'mcp'); window.open(withUtm(server.githubUrl), '_blank', 'noopener,noreferrer'); } }}
           disabled={!server.githubUrl}
         >
           <ExternalLink className="h-4 w-4 mr-2" />
@@ -227,6 +228,7 @@ const MCPServerDetail: React.FC = () => {
             if (response.data && response.data.length > 0) {
                 const serverData = response.data[0];
                 setServer(serverData);
+                void recordResourceView(serverData._id, 'mcp');
                 
                 if (
                     serverData.githubUrl &&
@@ -391,7 +393,7 @@ const MCPServerDetail: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <Button
-                onClick={() => server.githubUrl && window.open(withUtm(server.githubUrl), '_blank')}
+                onClick={() => { if (server.githubUrl) { void recordResourceClick(server._id, 'mcp'); window.open(withUtm(server.githubUrl), '_blank', 'noopener,noreferrer'); } }}
                 className="flex items-center gap-2 bg-linear-to-r from-gray-800 to-gray-900 hover:from-gray-900 hover:to-black text-white"
                 disabled={!server.githubUrl}
               >

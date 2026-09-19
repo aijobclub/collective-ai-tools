@@ -13,6 +13,13 @@ export interface SubmitFormData {
   installCommand: string;
   compatibleAgents: string[];
   skillCategory: string;
+  useCases: string;
+  limitations: string;
+  examples: string;
+  alternatives: string;
+  pricingDetails: string;
+  pricingUrl: string;
+  pricingCheckedAt: string;
 }
 
 export interface CategoryOption {
@@ -91,6 +98,8 @@ export function createEmptyForm(): SubmitFormData {
     installCommand: '',
     compatibleAgents: [],
     skillCategory: 'coding',
+    useCases: '', limitations: '', examples: '', alternatives: '',
+    pricingDetails: '', pricingUrl: '', pricingCheckedAt: '',
   };
 }
 
@@ -187,8 +196,16 @@ export function buildResourcePayload(
     data: {
       ...data,
       tags: parseTags(data.tags),
+      useCases: parseLines(data.useCases),
+      limitations: parseLines(data.limitations),
+      examples: parseLines(data.examples),
+      alternatives: parseLines(data.alternatives),
     },
   };
+}
+
+export function parseLines(value: string): string[] {
+  return value.split('\n').map(line => line.trim()).filter(Boolean);
 }
 
 async function parseErrorMessage(res: Response): Promise<string> {
