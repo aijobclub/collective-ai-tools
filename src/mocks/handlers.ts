@@ -84,6 +84,16 @@ export const handlers = [
     HttpResponse.json({ data: mockAITools, pagination: pagination(mockAITools.length) }),
   ),
 
+  http.get('/api/ai-tools/leaderboard', () => {
+    const tools = mockAITools.map(tool => ({ ...tool, recordedViews: mockViews.get(tool._id) ?? 0 }))
+      .filter(tool => tool.recordedViews > 0)
+      .sort((a, b) => b.recordedViews - a.recordedViews || a.name.localeCompare(b.name)).slice(0, 50);
+    let rank = 0;
+    return HttpResponse.json({ metric: 'recordedViews', limit: 50, data: tools.map((tool, index) => {
+      if (!index || tool.recordedViews !== tools[index - 1].recordedViews) rank = index + 1;
+      return { ...tool, rank };
+    }) });
+  }),
   http.get('/api/ai-tools/:id', ({ params }) => {
     const tool = mockAITools.find(item => item._id === params.id);
     return tool ? HttpResponse.json({ data: { ...tool, views: mockViews.get(tool._id) ?? 0 }, related: mockAITools.filter(item => item._id !== tool._id && item.categories.some(c => tool.categories.some(tc => tc._id === c._id))) }) : HttpResponse.json({ error: 'Tool not found' }, { status: 404 });

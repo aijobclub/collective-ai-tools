@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, Menu, Coffee, Github, X, Wrench, Terminal, Database, GitBranch,
-  MessageSquare, Brain, Puzzle,
+  MessageSquare, Brain, Puzzle, Trophy,
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -50,6 +50,12 @@ const Navigation: React.FC<NavigationProps> = ({ currentPath }) => {
       label: 'Tools',
       description: 'Curated AI tools from around the web',
       icon: Wrench
+    },
+    {
+      path: '/leaderboard',
+      label: 'Leaderboard',
+      description: 'Most viewed AI tools',
+      icon: Trophy
     },
     {
       path: '/mcp-catalog',
