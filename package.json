@@ -29,7 +29,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "node scripts/copy-readme.mjs",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.ssr.config.ts",
     "postbuild": "node scripts/prepare-public-shell.mjs",
     "preview": "node scripts/preview-public.mjs",
     "type-check": "tsc --noEmit",

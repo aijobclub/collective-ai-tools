@@ -3,11 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { resolve, extname } from 'node:path';
 import { createPublicHandler } from './handler.mjs';
 import { isPublicPath } from './public-pages.mjs';
+import { renderApp } from '../ssr-build/entry-server.js';
 
 // Read-only local production preview. Never proxies credentials or mutations.
 export function createPreviewServer({ fetchImpl = globalThis.fetch, dist = resolve('dist') } = {}) {
   const readTemplate = () => readFile(resolve(dist, 'app-shell.html'), 'utf8');
-  const render = createPublicHandler({ readTemplate, fetchImpl });
+  const render = createPublicHandler({ readTemplate, fetchImpl, renderApp });
   return createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
@@ -17,7 +18,7 @@ export function createPreviewServer({ fetchImpl = globalThis.fetch, dist = resol
         send: body => res.end(body),
         end: () => res.end(),
       };
-      if (isPublicPath(url.pathname)) return render({ method: req.method, query: { pagePath: url.pathname } }, reply);
+      if (isPublicPath(url.pathname)) return render({ method: req.method, query: { ...Object.fromEntries(url.searchParams), pagePath: url.pathname } }, reply);
       if (url.pathname.startsWith('/api/')) {
         const allowed = /^\/api\/(?:ai-tools(?:\/[a-zA-Z0-9-]+)?|mcp|prompts|skills|trending-repos|filters|stats|reviews\/[a-zA-Z0-9-]+)$/.test(url.pathname);
         if (!allowed || req.method !== 'GET') return reply.status(401).send(JSON.stringify({ error: 'Read-only public preview' }));

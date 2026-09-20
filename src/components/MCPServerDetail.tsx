@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { usePublicData } from '@/context/PublicDataContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { withUtm } from '@/lib/outbound';
 import { recordResourceClick, recordResourceView } from '@/lib/engagement';
@@ -107,7 +108,7 @@ const MCPServerSidebar: React.FC<{
           <span className="text-gray-600 dark:text-gray-400">Last Updated</span>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            <span>{server.lastUpdated ? new Date(server.lastUpdated).toLocaleDateString() : 'N/A'}</span>
+            <span>{server.lastUpdated ? new Date(server.lastUpdated).toLocaleDateString('en-US', { timeZone: 'UTC' }) : 'N/A'}</span>
           </div>
         </div>
       </CardContent>
@@ -212,8 +213,9 @@ const MCPServerDetail: React.FC = () => {
   const { serverId } = useParams<{ serverId: string }>();
   const navigate = useNavigate();
   
-  const [server, setServer] = useState<MCPServer | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const initial = usePublicData<{ data: MCPServer[] }>(`/api/mcp?id=${encodeURIComponent(serverId || '')}&limit=1`);
+  const [server, setServer] = useState<MCPServer | null>(initial?.data[0] ?? null);
+  const [loading, setLoading] = useState<boolean>(!initial);
   const [error, setError] = useState<string | null>(null);
   const [readmeContent, setReadmeContent] = useState<string | null>(null);
   const [readmeBaseUrl, setReadmeBaseUrl] = useState<string | null>(null);
@@ -221,7 +223,7 @@ const MCPServerDetail: React.FC = () => {
   useEffect(() => {
     async function loadServer() {
         if (!serverId) return;
-        setLoading(true);
+        setLoading(!initial);
         try {
             // Fetch by ID using the new API filter
             const response = await fetchMCPServers({ id: serverId });
@@ -255,7 +257,7 @@ const MCPServerDetail: React.FC = () => {
         }
     }
     loadServer();
-  }, [serverId]);
+  }, [serverId, initial]);
 
   async function fetchGithubData(githubUrl: string) {
       try {
@@ -456,7 +458,7 @@ const MCPServerDetail: React.FC = () => {
                 <div className="flex items-center justify-center gap-2 mb-3">
                   <Calendar className="h-6 w-6 text-purple-500" />
                   <span className="text-3xl font-bold">
-                    {new Date(server.addedDate || Date.now()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    {server.addedDate ? new Date(server.addedDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' }) : 'N/A'}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Added</p>

@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { usePublicData } from '@/context/PublicDataContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { recordResourceClick } from '@/lib/engagement';
 import { withUtm } from '@/lib/outbound';
@@ -44,14 +45,15 @@ const MCPCatalog: React.FC = () => {
 
   // Data States
   const [categories, setCategories] = useState<FilterOption[]>([]);
-  const [displayedServers, setDisplayedServers] = useState<MCPServer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initial = usePublicData<{ data: MCPServer[]; pagination?: { total: number } }>('/api/mcp?limit=1000');
+  const [displayedServers, setDisplayedServers] = useState<MCPServer[]>(initial?.data.slice(0, 20) ?? []);
+  const [loading, setLoading] = useState(!initial);
   const [popularMCP, setPopularMCP] = useState<MCPServer[]>([]);
   const [trendingMCP, setTrendingMCP] = useState<MCPServer[]>([]);
   
   // Pagination State
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(Math.max(1, Math.ceil((initial?.pagination?.total ?? initial?.data.length ?? 0) / 20)));
   const ITEMS_PER_PAGE = 20;
 
   const [loadingHighlights, setLoadingHighlights] = useState(true);
@@ -96,7 +98,7 @@ const MCPCatalog: React.FC = () => {
 
   // Fetch Servers on Filter Change
   useEffect(() => {
-    setLoading(true);
+    setLoading(!initial);
     
     // Convert 'all' to undefined for API
     const typeParam = selectedType === 'all' ? undefined : (selectedType === 'MCP Client' ? 'client' : 'server');
@@ -120,7 +122,7 @@ const MCPCatalog: React.FC = () => {
         setDisplayedServers([]);
     });
 
-  }, [debouncedSearch, selectedCategory, selectedType, sortBy, page]);
+  }, [debouncedSearch, selectedCategory, selectedType, sortBy, page, initial]);
 
   // Handlers
   const handlePageChange = (newPage: number) => {

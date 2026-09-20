@@ -1,5 +1,6 @@
 // Public, read-only HTML for every visitor, not a bot-specific alternate site.
-// React replaces this progressively rendered content when the app starts.
+// Supplies public data/metadata and a lightweight error/test fallback. Production
+// successful responses inject the shared React tree and its hydration snapshot.
 export const SITE = 'https://collectiveai.tools';
 export const PUBLIC_PATHS = [
   '/',
@@ -285,6 +286,8 @@ export function renderDocument(template, data) {
     .replace(
       '<div id="root"></div>',
       () =>
-        `<div id="root"><div class="public-ssr">${nav}<main>${data.content}</main><footer><a href="https://github.com/hanishrao/collective-ai-tools">Open-source frontend on GitHub</a></footer></div></div>`
+        data.reactHtml !== undefined
+          ? `<div id="root" data-rendered="react">${data.reactHtml}</div><script id="public-page-data" type="application/json">${JSON.stringify(data.snapshot).replace(/</g, '\\u003c')}</script>`
+          : `<div id="root"><div class="public-ssr">${nav}<main>${data.content}</main><footer><a href="https://github.com/hanishrao/collective-ai-tools">Open-source frontend on GitHub</a></footer></div></div>`
     );
 }

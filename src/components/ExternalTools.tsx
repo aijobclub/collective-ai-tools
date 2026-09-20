@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { usePublicData } from '@/context/PublicDataContext';
 import { useSearchParams } from 'react-router-dom';
 import { fetchAITools, AITool } from '@/lib/api';
 import ToolCard from './tools/ToolCard';
@@ -24,8 +25,13 @@ const ExternalTools: React.FC = () => {
   const initialCategory = searchParams.get('category');
 
   // State
-  const [tools, setTools] = useState<Tool[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const initial = usePublicData<{ data: AITool[] }>('/api/ai-tools?limit=1000');
+  const [tools, setTools] = useState<Tool[]>(() => (initial?.data ?? []).map(t => ({
+    _id: t._id, name: t.name, url: t.website || t.url, description: t.description,
+    tags: t.tags || [], category: t.categories?.[0]?.name || 'Uncategorized',
+    addedDate: t.addedDate, clickCount: 0, views: t.views ?? 0,
+  })));
+  const [isLoading, setIsLoading] = useState(!initial);
   const [error, setError] = useState<string | null>(null);
 
   // Filter State
@@ -67,7 +73,7 @@ const ExternalTools: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true);
+        setIsLoading(!initial);
         // Fetch all tools to enable client-side filtering/categorization
         // In a real large-scale app, we'd use server-side filtering, 
         // but for < 1000 tools, client-side is faster and smoother UI.
@@ -99,7 +105,7 @@ const ExternalTools: React.FC = () => {
     };
 
     loadData();
-  }, []);
+  }, [initial]);
 
   // Update URL tags when category changes
   useEffect(() => {

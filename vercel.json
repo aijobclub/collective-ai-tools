@@ -3,7 +3,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/render-public.mjs": {
-      "includeFiles": "dist/app-shell.html",
+      "includeFiles": "{dist/app-shell.html,ssr-build/**/*.js}",
       "maxDuration": 15
     }
   },

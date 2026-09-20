@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { DiscoverCard } from './DiscoverCard';
-import { SOURCES, type SortKey } from './sources';
+import { SOURCES, adaptTool, adaptMcp, adaptPrompt, adaptSkill, adaptRepo, type SortKey } from './sources';
+import { usePublicData } from '@/context/PublicDataContext';
 import { TYPE_ACCENT } from './theme';
 import type { DiscoverItem, DiscoverType } from './types';
 import { Select } from '../ui/select';
@@ -53,8 +54,19 @@ function CardGrid({ items, loading }: { items: DiscoverItem[]; loading?: boolean
 }
 
 export function DiscoverBrowse({ showFavorites }: { showFavorites?: boolean }) {
-  const [groups, setGroups] = useState<Partial<Record<DiscoverType, DiscoverItem[]>>>({});
-  const [totals, setTotals] = useState<Partial<Record<DiscoverType, number>>>({});
+  const tools = usePublicData<{ data: Parameters<typeof adaptTool>[0][]; pagination?: { total: number } }>('/api/ai-tools?limit=12&sort=popular');
+  const mcp = usePublicData<{ data: Parameters<typeof adaptMcp>[0][]; pagination?: { total: number } }>('/api/mcp?limit=12&sort=popular');
+  const prompts = usePublicData<{ prompts: Parameters<typeof adaptPrompt>[0][]; total?: number }>('/api/prompts?limit=12&sort=rating');
+  const skills = usePublicData<{ data: Parameters<typeof adaptSkill>[0][] }>('/api/skills');
+  const repos = usePublicData<{ data: Parameters<typeof adaptRepo>[0][] }>('/api/trending-repos');
+  const [groups, setGroups] = useState<Partial<Record<DiscoverType, DiscoverItem[]>>>(() => tools ? {
+    tool: tools.data.map(adaptTool), mcp: (mcp?.data ?? []).map(adaptMcp), prompt: (prompts?.prompts ?? []).map(adaptPrompt),
+    skill: (skills?.data ?? []).slice(0, 12).map(adaptSkill), repo: (repos?.data ?? []).slice(0, 12).map(adaptRepo),
+  } : {});
+  const [totals, setTotals] = useState<Partial<Record<DiscoverType, number>>>(() => tools ? {
+    tool: tools.pagination?.total ?? tools.data.length, mcp: mcp?.pagination?.total ?? mcp?.data.length ?? 0,
+    prompt: prompts?.total ?? prompts?.prompts.length ?? 0, skill: skills?.data.length ?? 0, repo: repos?.data.length ?? 0,
+  } : {});
   const [filter, setFilter] = useState<Filter>('all');
   const [sort, setSort] = useState<SortKey>('popular');
   const { isFavoriteAny } = useAllFavorites();

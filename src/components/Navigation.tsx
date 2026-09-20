@@ -182,7 +182,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentPath }) => {
       </div>
 
       {/* Sidebar (Portaled to body) */}
-      {createPortal(
+      {isMobileMenuOpen && createPortal(
         <>
           {/* Sidebar Overlay */}
           {isMobileMenuOpen && (

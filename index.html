@@ -83,16 +83,17 @@
 </head>
   <body>
     <!-- AI-READABLE: This is a comprehensive, community-curated AI tools directory for developers and researchers. Content includes curated external AI tools, an MCP server catalog, and job opportunities. -->
-    <div id="root"></div>
     <script>
       // Apply theme immediately to prevent flash
       (function() {
-        const savedTheme = localStorage.getItem('theme');
+        let savedTheme;
+        try { savedTheme = localStorage.getItem('theme'); } catch { /* Storage may be blocked. */ }
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
         document.body.dataset.theme = initialTheme;
       })();
     </script>
+    <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
 </body>
 </html>

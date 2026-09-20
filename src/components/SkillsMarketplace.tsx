@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { usePublicData } from '@/context/PublicDataContext';
 import { Link } from 'react-router-dom';
 import { withUtm } from '@/lib/outbound';
 import {
@@ -85,9 +86,10 @@ function formatStars(n: number): string {
 }
 
 const SkillsMarketplace: React.FC = () => {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [categories, setCategories] = useState<SkillCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initial = usePublicData<SkillsResponse>('/api/skills');
+  const [skills, setSkills] = useState<Skill[]>(initial?.data ?? []);
+  const [categories, setCategories] = useState<SkillCategory[]>(initial?.categories ?? []);
+  const [loading, setLoading] = useState(!initial);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -103,7 +105,7 @@ const SkillsMarketplace: React.FC = () => {
     let cancelled = false;
 
     queueMicrotask(() => {
-      if (!cancelled) setLoading(true);
+      if (!cancelled) setLoading(!initial);
     });
 
     fetch(url)
@@ -128,7 +130,7 @@ const SkillsMarketplace: React.FC = () => {
       });
 
     return () => { cancelled = true; };
-  }, [search, activeCategory]);
+  }, [search, activeCategory, initial]);
 
   const handleCopy = useCallback((id: string, command: string) => {
     navigator.clipboard.writeText(command);

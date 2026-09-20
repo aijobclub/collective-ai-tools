@@ -7,9 +7,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './app';
-import { AuthProvider } from './context/AuthContext';
-import { FavoritesProvider } from './context/FavoritesContext';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { AppProviders } from './AppProviders';
 import './styles/globals.css';
 
 // Mocked API by default in dev, so contributors without backend access get a
@@ -24,21 +22,18 @@ async function enableMocksIfNeeded() {
 async function bootstrap() {
   await enableMocksIfNeeded();
 
-  const root = ReactDOM.createRoot(
-    document.getElementById('root') as HTMLElement
-  );
-
-  root.render(
+  const container = document.getElementById('root') as HTMLElement;
+  const state = document.getElementById('public-page-data');
+  const snapshot = state ? JSON.parse(state.textContent || 'null') : null;
+  const app = (
     <React.StrictMode>
       <BrowserRouter>
-        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id'}>
-          <AuthProvider>
-            <FavoritesProvider><App /></FavoritesProvider>
-          </AuthProvider>
-        </GoogleOAuthProvider>
+        <AppProviders snapshot={snapshot}><App /></AppProviders>
       </BrowserRouter>
     </React.StrictMode>
   );
+  if (snapshot && container.dataset.rendered === 'react') ReactDOM.hydrateRoot(container, app);
+  else ReactDOM.createRoot(container).render(app);
 }
 
 bootstrap();

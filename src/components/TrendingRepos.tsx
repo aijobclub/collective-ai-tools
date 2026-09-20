@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { usePublicData } from '@/context/PublicDataContext';
 import { Star, GitBranch, ExternalLink, RefreshCw, Circle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -11,12 +12,13 @@ interface Repo {
 }
 
 const TrendingRepos: React.FC = () => {
-  const [repos, setRepos] = useState<Repo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initial = usePublicData<{ data: Repo[] }>('/api/trending-repos');
+  const [repos, setRepos] = useState<Repo[]>(initial?.data ?? []);
+  const [loading, setLoading] = useState(!initial);
   const [error, setError] = useState('');
 
   const fetchRepos = async () => {
-    setLoading(true);
+    setLoading(!initial);
     try {
       const res = await fetch('/api/trending-repos');
       if (!res.ok) throw new Error('Failed to fetch');
@@ -131,13 +133,13 @@ const TrendingRepos: React.FC = () => {
                                 {repo.stars && (
                                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400 text-xs font-semibold">
                                         <Star className="w-3.5 h-3.5 text-amber-400 fill-current" />
-                                        {parseInt(repo.stars).toLocaleString()}
+                                        {parseInt(repo.stars).toLocaleString('en-US')}
                                     </div>
                                 )}
                                 {repo.forks && (
                                     <div className="flex items-center gap-1 text-gray-500 dark:text-gray-500 text-xs">
                                         <GitBranch className="w-3.5 h-3.5" />
-                                        {parseInt(repo.forks).toLocaleString()}
+                                        {parseInt(repo.forks).toLocaleString('en-US')}
                                     </div>
                                 )}
                             </div>
