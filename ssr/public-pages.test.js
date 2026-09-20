@@ -8,6 +8,21 @@ const template = readFileSync('index.html', 'utf8').replace(
   ''
 );
 const id = '695933dedece1dcb62245752';
+it('embeds matching React HTML and an inert, script-safe hydration snapshot', () => {
+  const html = renderDocument(template, {
+    path: '/', status: 200, title: 'Example', description: 'Example',
+    reactHtml: '<main><h1>Existing layout</h1></main>',
+    snapshot: { path: '/', data: { value: '</script><script>alert(1)</script>' } },
+  });
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  expect(doc.querySelector('#root').dataset.rendered).toBe('react');
+  expect(doc.querySelector('#root').innerHTML).toBe('<main><h1>Existing layout</h1></main>');
+  expect(doc.querySelector('.public-ssr')).toBeNull();
+  const state = doc.querySelector('#public-page-data');
+  expect(state.type).toBe('application/json');
+  expect(JSON.parse(state.textContent).data.value).toBe('</script><script>alert(1)</script>');
+  expect(html).not.toContain('<script>alert(1)</script>');
+});
 const tool = {
   _id: id,
   name: 'Example Tool',
@@ -230,6 +245,33 @@ function response() {
   };
 }
 describe('public renderer HTTP boundary', () => {
+  it.each([undefined, 'Writing'])('passes only public data and matching query state into React (%s)', async category => {
+    const renderApp = vi.fn(async () => '<main>Shared React layout</main>');
+    const handler = createPublicHandler({
+      readTemplate: async () => template,
+      fetchImpl: async () => ({ ok: true, json: async () => ({ data: [tool] }) }),
+      renderApp,
+    });
+    const res = response();
+    await handler({ method: 'GET', query: { pagePath: '/tools', category, private: 'ignore-me' }, headers: { cookie: 'private-cookie' } }, res);
+    expect(renderApp).toHaveBeenCalledWith(category ? '/tools?category=Writing' : '/tools', { '/api/ai-tools?limit=1000': { data: [tool] } });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toContain('data-rendered="react"');
+    expect(res.body).toContain('href="https://collectiveai.tools/tools"');
+    expect(res.body).not.toContain('private-cookie');
+    expect(res.body).not.toContain('ignore-me');
+  });
+  it('returns an uncached 503 if React rendering fails', async () => {
+    const handler = createPublicHandler({
+      readTemplate: async () => template,
+      renderApp: async () => { throw new Error('Render failed'); },
+    });
+    const res = response();
+    await handler({ method: 'GET', query: { pagePath: '/prompt-studio' } }, res);
+    expect(res.statusCode).toBe(503);
+    expect(res.headers['Cache-Control']).toBe('no-store');
+    expect(res.body).not.toContain('Render failed');
+  });
   it('uses only the configured API origin, never forwards user credentials, and caches public HTML', async () => {
     const fetchImpl = vi.fn(async () => ({
       ok: true,
@@ -328,7 +370,7 @@ describe('deployment crawl configuration', () => {
     ).toContain('/api/render-public');
     expect(config.rewrites.at(-1).destination).toBe('/app-shell.html');
     expect(config.functions['api/render-public.mjs'].includeFiles).toBe(
-      'dist/app-shell.html'
+      '{dist/app-shell.html,ssr-build/**/*.js}'
     );
   });
 });

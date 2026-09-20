@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePublicData } from '@/context/PublicDataContext';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowUpRight, Trophy } from 'lucide-react';
 import { cleanToolDescription, toolPath } from '@/lib/toolDetails';
@@ -19,7 +20,8 @@ type Result =
   | { state: 'ready'; tools: RankedTool[] };
 
 function Rankings({ onRetry }: { onRetry: () => void }) {
-  const [result, setResult] = useState<Result>({ state: 'loading' });
+  const initial = usePublicData<{ data: RankedTool[] }>('/api/ai-tools/leaderboard');
+  const [result, setResult] = useState<Result>(initial ? { state: 'ready', tools: initial.data } : { state: 'loading' });
   useEffect(() => {
     const controller = new AbortController();
     async function load() {

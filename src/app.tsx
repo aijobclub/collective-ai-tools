@@ -54,6 +54,13 @@ function RouteFallback() {
   );
 }
 
+function HydrationReady() {
+  useEffect(() => {
+    document.getElementById('root')?.setAttribute('data-hydrated', 'true');
+  }, []);
+  return null;
+}
+
 function App() {
   const location = useLocation();
   useEffect(() => {
@@ -113,6 +120,7 @@ function App() {
               </Route>
             </Route>
           </Routes>
+          <HydrationReady />
           </Suspense>
         </main>
         <Footer />

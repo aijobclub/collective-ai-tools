@@ -4,6 +4,7 @@ export function createPublicHandler({
   readTemplate,
   fetchImpl = globalThis.fetch,
   apiOrigin = 'https://app.collectiveai.tools',
+  renderApp,
 }) {
   return async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -15,6 +16,7 @@ export function createPublicHandler({
     }
     const path =
       typeof req.query?.pagePath === 'string' ? req.query.pagePath : '';
+    const publicData = {};
     const getJson = async endpoint => {
       // Endpoints are constructed by loadPublicPage, never taken from request URLs.
       // Do not forward cookies, Authorization, Host, or other visitor headers.
@@ -27,13 +29,26 @@ export function createPublicHandler({
         throw Object.assign(new Error('Public API unavailable'), {
           status: response.status,
         });
-      return response.json();
+      const data = await response.json();
+      publicData[endpoint] = data;
+      return data;
     };
     try {
       const [template, page] = await Promise.all([
         readTemplate(),
         loadPublicPage(path, getJson),
       ]);
+      if (renderApp && page.status === 200) {
+        const search = new URLSearchParams();
+        // These URL parameters influence the React tree before effects run.
+        // Keep them identical on the server and browser without changing canonical.
+        for (const key of ['q', 'category', 'type']) {
+          if (typeof req.query?.[key] === 'string') search.set(key, req.query[key]);
+        }
+        const location = search.size ? `${path}?${search}` : path;
+        page.reactHtml = await renderApp(location, publicData);
+        page.snapshot = { path, data: publicData };
+      }
       res.setHeader(
         'Cache-Control',
         page.status === 200

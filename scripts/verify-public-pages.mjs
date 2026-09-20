@@ -14,7 +14,7 @@ const mockFetch = async url => {
   else if (path === '/api/ai-tools') data = { data: [tool], pagination };
   else if (path === '/api/mcp') data = { data: [{ _id: id, id: 'example-mcp', name: 'Example MCP', description: 'Read public documents', categories: [], tags: [], features: ['Read documents'], type: 'MCP Server' }], pagination };
   else if (path === '/api/prompts') data = { prompts: [{ _id: id, title: 'Example Prompt', content: 'Explain this code clearly', description: 'Explain code', tags: [], source: 'user', rating: 0, votes: [] }], total: 1, totalPages: 1 };
-  else if (path === '/api/skills') data = { data: [{ id, name: 'Example Skill', description: 'Review code', category: 'coding', repo: 'https://example.com', tags: [], compatibleAgents: [] }], categories: [], agentPlatforms: [] };
+  else if (path === '/api/skills') data = { data: [{ id, name: 'Example Skill', description: 'Review code', category: 'coding', repo: 'https://example.com', tags: [], compatibleAgents: [], stars: 0, installCommand: 'npx example-skill' }], categories: [], agentPlatforms: [] };
   else if (path === '/api/trending-repos') data = { data: [{ title: 'Example Repo', description: 'A repository', link: 'https://example.com' }] };
   else if (path === '/api/filters') data = { categories: [], pricing: [], languages: [] };
   else if (path === '/api/stats') data = { aiTools: 1, mcpServers: 1, mcpClients: 0 };
@@ -29,19 +29,44 @@ const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_P
 try {
   assert(!(await readFile('dist/sw.js', 'utf8')).includes('index.html'), 'Service worker must not restore the SPA navigation shell');
   for (const javaScriptEnabled of [false, true]) {
-    for (const width of [375, 1440]) {
-      const context = await browser.newContext({ javaScriptEnabled, viewport: { width, height: 900 }, serviceWorkers: 'block' });
-      await context.route('**/*', route => new URL(route.request().url()).origin === base ? route.continue() : route.abort());
+    for (const width of [375, 768, 1440]) {
+      const context = await browser.newContext({ javaScriptEnabled, viewport: { width, height: 900 }, colorScheme: width === 1440 ? 'dark' : 'light', timezoneId: 'Asia/Kolkata', serviceWorkers: 'block' });
+      let releaseScripts;
+      let scriptsReady = Promise.resolve();
+      await context.route('**/*', async route => {
+        if (new URL(route.request().url()).origin !== base) return route.abort();
+        if (route.request().resourceType() === 'script' && new URL(route.request().url()).pathname.startsWith('/assets/')) await scriptsReady;
+        return route.continue();
+      });
       const errors = [];
       const page = await context.newPage();
       page.setDefaultTimeout(10000);
       page.on('pageerror', error => errors.push(error.message));
-      for (const path of ['/', '/tools', `/tools/${id}`, '/mcp-catalog', '/mcp-catalog/example-mcp', '/prompts', '/skills', '/trending', '/leaderboard', '/prompt-studio']) {
-        const response = await page.goto(base + path);
-        assert.equal(response.status(), 200);
-        if (javaScriptEnabled) await page.locator('.public-ssr').waitFor({ state: 'detached' });
-        else assert((await page.locator('main').textContent()).trim().length > 20);
-        await page.waitForFunction(expected => document.querySelector('link[rel="canonical"]')?.getAttribute('href') === expected, `https://collectiveai.tools${path}`);
+      page.on('console', message => {
+        if (message.type() === 'error' && /hydration|Minified React error|did not match/i.test(message.text())) errors.push(message.text());
+      });
+      const paths = ['/', '/tools', `/tools/${id}`, '/mcp-catalog', '/mcp-catalog/example-mcp', '/prompts', '/skills', '/trending', '/leaderboard', '/prompt-studio', '/?q=example', '/tools?category=Writing', '/mcp-catalog?type=client'];
+      for (const path of paths) {
+        if (javaScriptEnabled) scriptsReady = new Promise(resolve => { releaseScripts = resolve; });
+        const response = await page.goto(base + path, { waitUntil: 'commit' });
+        assert.equal(response.status(), 200, `HTTP status for ${path}`);
+        await page.locator('#root[data-rendered="react"] main').waitFor();
+        assert.equal(await page.locator('.public-ssr').count(), 0);
+        assert((await page.locator('main').textContent()).trim().length > 20);
+        if (javaScriptEnabled) {
+          await page.evaluate(() => { window.__initialMain = document.querySelector('main'); window.__initialHeading = document.querySelector('main h1'); });
+          if (path === '/') {
+            await page.getByPlaceholder('Search tools, MCP servers, prompts, skills, repos…').waitFor();
+            assert((await page.locator('main').textContent()).includes('Example Tool'));
+            await page.screenshot({ path: `/tmp/hydration-home-${width}-before.png` });
+          }
+          releaseScripts();
+          await page.locator('#root[data-hydrated="true"]').waitFor();
+          await page.waitForLoadState('networkidle');
+          assert(await page.evaluate(() => window.__initialMain === document.querySelector('main') && window.__initialHeading === document.querySelector('main h1')), `React replaced server DOM at ${path}`);
+          if (path === '/') await page.screenshot({ path: `/tmp/hydration-home-${width}-after.png` });
+        }
+        await page.waitForFunction(expected => document.querySelector('link[rel="canonical"]')?.getAttribute('href') === expected, `https://collectiveai.tools${path.split('?')[0]}`);
         assert.equal(await page.locator('link[rel="canonical"]').count(), 1);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `Overflow at ${path}`);
         if (path === `/tools/${id}`) {
@@ -60,7 +85,7 @@ try {
         await page.getByRole('button', { name: 'Saved', exact: true }).waitFor();
       }
       assert.deepEqual(errors, []);
-      console.log(`PASS ${width}px JS=${javaScriptEnabled}: 10 routes, content, canonicals, no overflow/runtime errors${javaScriptEnabled ? ', navigation and guest save' : ''}`);
+      console.log(`PASS ${width}px JS=${javaScriptEnabled}: ${paths.length} route/query cases, content, canonicals, no overflow/runtime errors${javaScriptEnabled ? ', retained server DOM, navigation and guest save' : ''}`);
       await context.close();
     }
   }

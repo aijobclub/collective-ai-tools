@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { usePublicData } from '@/context/PublicDataContext';
 import { useNavigate } from 'react-router-dom';
 import { 
   Heart, 
@@ -39,15 +40,16 @@ interface CommunityPromptsProps {
 
 const CommunityPrompts: React.FC<CommunityPromptsProps> = ({ showHeader = true }) => {
   const { user } = useAuth();
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initial = usePublicData<{ prompts: Prompt[] }>('/api/prompts?limit=50&sort=rating');
+  const [prompts, setPrompts] = useState<Prompt[]>(initial?.prompts ?? []);
+  const [loading, setLoading] = useState(!initial);
   const [search, setSearch] = useState('');
   const [copyId, setCopyId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'user' | 'fabric' | 'anthropic'>('all');
 
   const fetchPrompts = useCallback(async () => {
     try {
-      setLoading(true);
+      setLoading(!initial);
       const query = new URLSearchParams({ 
         limit: '50',
         sort: 'rating'
@@ -63,7 +65,7 @@ const CommunityPrompts: React.FC<CommunityPromptsProps> = ({ showHeader = true }
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, initial]);
 
   useEffect(() => {
     fetchPrompts();

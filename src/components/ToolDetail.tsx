@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePublicData } from '@/context/PublicDataContext';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Heart } from 'lucide-react';
 import type { AITool } from '@/lib/api';
@@ -127,7 +128,7 @@ function LoadedTool({ tool, related }: { tool: AITool; related: AITool[] }) {
             className='text-sm text-gray-600 dark:text-gray-400'
             title='Recorded visits, with repeat visits limited. This is not a unique-user count.'
           >
-            {views.toLocaleString()} {views === 1 ? 'view' : 'views'}
+            {views.toLocaleString('en-US')} {views === 1 ? 'view' : 'views'}
           </span>
         </div>
         {!!tool.tags?.length && (
@@ -251,10 +252,11 @@ function LoadedTool({ tool, related }: { tool: AITool; related: AITool[] }) {
 }
 
 function ToolDetailContent({ id }: { id: string }) {
+  const initial = usePublicData<{ data: AITool; related: AITool[] }>(`/api/ai-tools/${id}`);
   const [result, setResult] = useState<{
     data: AITool;
     related: AITool[];
-  } | null>(null);
+  } | null>(initial ?? null);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
