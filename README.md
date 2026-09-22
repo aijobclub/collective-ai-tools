@@ -1153,6 +1153,7 @@ Use these hashtags in search to filter out the tools
 
 ## Video
 
+- [AIVG](https://ai-video-generators.com/image-to-video) - Animate a photo into a short video with a choice of AI video models. `#paid` `#video`
 - [AVCLabs](https://www.avclabs.com/) - 100% free automatic video background remover. `#free`
 - [C2Anime](https://c2anime.com/) - AI Anime Agent that turns stories into animated short films with voices and sound. `#paid` `#animation`
 - [Captions](https://www.captions.ai/) - AI creative studio application for creators. `#freemium`
